@@ -1,0 +1,11 @@
+{
+  "id": "voice_test_juan",
+  "title": "Prueba aislada juan",
+  "segments": [
+    {
+      "speaker": "juan",
+      "text": "Hola, soy Papá Noel.",
+      "pause_ms": 100
+    }
+  ]
+}

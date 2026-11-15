@@ -16,10 +16,12 @@ jobs:
       - run: pytest -q
       - run: loh validate stories/voice_test_papa_noel.json
       - run: loh render stories/voice_test_papa_noel.json --provider espeak-preview --allow-short
+      - run: loh render stories/voice_test_juan.json --provider espeak-preview --allow-short
+      - run: loh render stories/voice_test_carla.json --provider espeak-preview --allow-short
       - uses: actions/upload-artifact@v4
         with:
-          name: demo-papa-noel-juan-carla-robotica
+          name: tres-pruebas-de-voces-roboticas
           path: |
-            output/voice_test_papa_noel.mp3
-            output/voice_test_papa_noel.wav
-            output/voice_test_papa_noel.report.json
+            output/*.mp3
+            output/*.wav
+            output/*.report.json
