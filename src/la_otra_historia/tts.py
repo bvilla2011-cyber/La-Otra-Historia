@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import soundfile as sf
 from .naturalness import describe_audio
+from .gpu import qwen_load_kwargs
 
 MODEL_BASE = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 
@@ -67,8 +68,7 @@ class QwenTTS:
             digest.update(config['ref_text'].encode())
         self.identity += ':' + digest.hexdigest()[:20] + ':multi-take-v1'
         self.model = Qwen3TTSModel.from_pretrained(
-            MODEL_BASE, device_map='cuda:0', dtype=torch.bfloat16,
-            attn_implementation='sdpa')
+            MODEL_BASE, **qwen_load_kwargs(torch))
         self.prompts = {}
         self.last_takes = []
 

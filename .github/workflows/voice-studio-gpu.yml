@@ -5,7 +5,7 @@ on:
       candidates:
         description: 'Audiciones por locutor (1-5)'
         required: true
-        default: '3'
+        default: '1'
         type: choice
         options: ['1', '2', '3']
 jobs:
@@ -24,9 +24,11 @@ jobs:
         run: |
           command -v ffmpeg
           python -m pip install -e '.[voice,dev]'
+      - name: Diagnóstico GPU antes de descargar pesos
+        run: loh doctor --strict
       - name: Ejecutar pruebas CPU
         run: python -m pytest -q
-      - name: Diseñar tres audiciones para cada narrador
+      - name: Diseñar audiciones originales para cada narrador
         run: loh design-voices --dest voices --candidates ${{ inputs.candidates }}
       - name: Preparar referencias PROVISIONALES para audición
         run: |
@@ -34,8 +36,8 @@ jobs:
           loh approve-voice carla 1 --voices voices --preview
       - name: Audición combinada y narración (NO aprobar temporada)
         run: |
-          loh render stories/voice_test_papa_noel.json --provider qwen --voices voices --takes 3 --allow-short --output output/neural
-          loh render stories/voice_test_narracion.json --provider qwen --voices voices --takes 3 --allow-short --output output/neural
+          loh render stories/voice_test_papa_noel.json --provider qwen --voices voices --takes 1 --allow-short --output output/neural
+          loh render stories/voice_test_narracion.json --provider qwen --voices voices --takes 1 --allow-short --output output/neural
       - name: Subir demos, referencias y análisis técnicos
         if: always()
         uses: actions/upload-artifact@v4

@@ -2,7 +2,7 @@
 
 Antología de ficción original, narrada en tercera persona por Juan (voz masculina) y Carla (voz femenina).
 
-**Estado: prototipo 0.2.** La prueba «Hola, soy Papá Noel» está disponible con dos voces distintas mediante `espeak-preview`. Ese proveedor es ROBÓTICO: sirve para probar la tubería, **no** tiene calidad ElevenLabs. El destino de producción es Qwen3-TTS, pendiente de GPU, voces de referencia y revisión de tomas.
+**Estado: prototipo 0.5; aún NO se han probado audiciones Qwen reales en GPU.** La prueba «Hola, soy Papá Noel» está disponible con dos voces distintas mediante `espeak-preview`. Ese proveedor es ROBÓTICO: sirve para probar la tubería, **no** tiene calidad ElevenLabs. El destino de producción es Qwen3-TTS, pendiente de GPU, voces de referencia y revisión de tomas.
 
 ## Instalar en Linux (Python 3.11+)
 ```bash
@@ -45,3 +45,11 @@ Se han añadido audiciones A/B/C de **voces originales** de Juan y Carla, selecc
 - En Actions se ha preparado un [workflow experimental con GPU propia](https://github.com/bvilla2011-cyber/La-Otra-Historia/actions/workflows/voice-studio-gpu.yml). No puede ejecutarse en el runner gratuito normal de GitHub y no se ha verificado aún en una GPU.
 
 Lee [Calidad y aprobaciones](docs/calidad_voces.md) antes de publicar.
+
+## v0.5 — Auditoría de inferencia Qwen y GPU
+Se verificó la API upstream VoiceDesign/VoiceClone, se añadió carga FP16/BF16 compatible y diagnóstico previo a descargas. La calidad vocal **no** está demostrada por tests unitarios.
+```bash
+loh doctor
+loh doctor --strict  # devuelve error si no hay CUDA + dependencias
+```
+Para una máquina GPU, revisa [Auditoría y guía de ejecución](docs/auditoria_gpu.md) o `bash scripts/gpu_quickstart.sh`; empieza por **una** muestra por narrador. Evita ejecutar voces Qwen en Actions salvo que hayas conectado un runner GPU propio.

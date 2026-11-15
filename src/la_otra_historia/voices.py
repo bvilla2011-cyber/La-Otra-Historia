@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from .gpu import qwen_load_kwargs
 
 VOICE_PROFILES = {
     'juan': {
@@ -29,8 +30,7 @@ def audition_voices(dest, candidates=3, model_id='Qwen/Qwen3-TTS-12Hz-1.7B-Voice
         raise RuntimeError('Para diseñar voces hace falta GPU CUDA')
     root = Path(dest)
     root.mkdir(parents=True, exist_ok=True)
-    model = Qwen3TTSModel.from_pretrained(
-        model_id, device_map='cuda:0', dtype=torch.bfloat16, attn_implementation='sdpa')
+    model = Qwen3TTSModel.from_pretrained(model_id, **qwen_load_kwargs(torch))
     inventory = []
     for speaker, profile in VOICE_PROFILES.items():
         folder = root / 'auditions' / speaker
@@ -47,6 +47,9 @@ def audition_voices(dest, candidates=3, model_id='Qwen/Qwen3-TTS-12Hz-1.7B-Voice
             sf.write(out, wavs[0], sr)
             inventory.append({'speaker': speaker, 'take': i, 'audio': str(out),
                               'reference_text': profile['ref_text'], 'approved': False})
+    # Evitar mantener VoiceDesign en VRAM al cargar Base.
+    del model
+    torch.cuda.empty_cache()
     (root / 'auditions' / 'manifest.json').write_text(
         json.dumps(inventory, ensure_ascii=False, indent=2), encoding='utf-8')
     return inventory

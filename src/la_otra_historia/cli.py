@@ -7,6 +7,8 @@ from .schema import read_script, stats
 def main():
     parser = argparse.ArgumentParser(prog="loh")
     subs = parser.add_subparsers(dest="command", required=True)
+    diagnostic = subs.add_parser("doctor", help="Diagnóstico CUDA sin descargar pesos")
+    diagnostic.add_argument("--strict", action="store_true")
     val = subs.add_parser("validate")
     val.add_argument("script", type=Path)
     voices = subs.add_parser("design-voices")
@@ -27,7 +29,13 @@ def main():
     approve.add_argument("--voices", type=Path, default=Path("voices"))
     approve.add_argument("--preview", action="store_true", help="Selección provisional, no aprobada")
     args = parser.parse_args()
-    if args.command == "validate":
+    if args.command == "doctor":
+        from .gpu import doctor
+        report = doctor()
+        print(json.dumps(report, ensure_ascii=False, indent=2))
+        if args.strict and not report["model_ready"]:
+            parser.exit(2, "GPU o dependencias Qwen no listas.\n")
+    elif args.command == "validate":
         print(json.dumps(stats(read_script(args.script)), ensure_ascii=False, indent=2))
     elif args.command == "design-voices":
         from .voices import audition_voices
