@@ -19,6 +19,8 @@ def main():
     prod.add_argument("--assets", type=Path, default=Path("assets"))
     prod.add_argument("--output", type=Path, default=Path("output"))
     prod.add_argument("--allow-short", action="store_true")
+    prod.add_argument("--takes", type=int, default=2, choices=range(1, 6), help="Número de tomas Qwen")
+    prod.add_argument("--max-chars", type=int, default=260, help="Longitud máxima por frase")
     approve = subs.add_parser("approve-voice", help="Fijar una toma sintética escuchada")
     approve.add_argument("speaker", choices=["juan", "carla"])
     approve.add_argument("take", type=int)
@@ -36,7 +38,8 @@ def main():
     else:
         from .render import render
         print(json.dumps(render(args.script, args.output, args.voices,
-                                args.assets, args.provider, args.allow_short),
+                                args.assets, args.provider, args.allow_short,
+                                takes=args.takes, max_chars=args.max_chars),
                          ensure_ascii=False, indent=2))
 
 if __name__ == "__main__":
