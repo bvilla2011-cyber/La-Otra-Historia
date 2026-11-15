@@ -1,0 +1,16 @@
+.venv/
+__pycache__/
+.pytest_cache/
+*.py[cod]
+dist/
+build/
+*.egg-info/
+output/
+cache/
+voices/*.wav
+voices/*.json
+*.mp3
+*.wav
+.env
+*.key
+*.token

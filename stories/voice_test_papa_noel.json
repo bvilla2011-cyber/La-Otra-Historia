@@ -1,0 +1,16 @@
+{
+  "id": "voice_test_papa_noel",
+  "title": "Prueba de voces — Hola, soy Papá Noel",
+  "segments": [
+    {
+      "speaker": "juan",
+      "text": "Hola, soy Papá Noel.",
+      "pause_ms": 700
+    },
+    {
+      "speaker": "carla",
+      "text": "Hola, soy Papá Noel.",
+      "pause_ms": 250
+    }
+  ]
+}

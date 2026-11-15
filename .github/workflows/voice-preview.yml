@@ -1,0 +1,25 @@
+name: Prueba de voces Juan y Carla
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+jobs:
+  generate-preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: sudo apt-get update && sudo apt-get install -y espeak ffmpeg
+      - run: pip install -e '.[dev]'
+      - run: pytest -q
+      - run: loh validate stories/voice_test_papa_noel.json
+      - run: loh render stories/voice_test_papa_noel.json --provider espeak-preview --allow-short
+      - uses: actions/upload-artifact@v4
+        with:
+          name: demo-papa-noel-juan-carla-robotica
+          path: |
+            output/voice_test_papa_noel.mp3
+            output/voice_test_papa_noel.wav
+            output/voice_test_papa_noel.report.json
