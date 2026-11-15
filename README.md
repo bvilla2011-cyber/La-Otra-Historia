@@ -34,3 +34,14 @@ Hay un nuevo proveedor `piper-preview` de dos voces neuronales españolas (model
 
 - [Generar y descargar las audiciones en GitHub Actions](https://github.com/bvilla2011-cyber/La-Otra-Historia/actions/workflows/voice-neural-cpu.yml).
 - [Guía y licencias](docs/objetivo_voces_neuronales.md).
+
+## v0.4 — Motor de interpretación y audiciones
+
+Se han añadido audiciones A/B/C de **voces originales** de Juan y Carla, selección humana de referencia vocal, tomas múltiples de cada fragmento, descartes de errores técnicos, separación de frases largas sin cortar palabras, fundidos muy cortos, informe por frase y validación de que las voces estén aprobadas antes de producir una temporada. La validación técnica NO demuestra realismo humano.
+
+- Demo CPU: seguir usando el proveedor `piper-preview` como prueba técnica.
+- Voz avanzada: ejecutar `loh design-voices --dest voices --candidates 3` con GPU CUDA, escuchar todas las muestras y elegir cada voz con `loh approve-voice juan 2` / `loh approve-voice carla 1` (ejemplo).
+- Grabar: `loh render stories/voice_test_narracion.json --provider qwen --voices voices --takes 3 --allow-short`.
+- En Actions se ha preparado un [workflow experimental con GPU propia](https://github.com/bvilla2011-cyber/La-Otra-Historia/actions/workflows/voice-studio-gpu.yml). No puede ejecutarse en el runner gratuito normal de GitHub y no se ha verificado aún en una GPU.
+
+Lee [Calidad y aprobaciones](docs/calidad_voces.md) antes de publicar.

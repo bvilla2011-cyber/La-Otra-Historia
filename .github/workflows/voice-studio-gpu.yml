@@ -1,0 +1,50 @@
+name: Estudio de voces Qwen3 (GPU propia)
+on:
+  workflow_dispatch:
+    inputs:
+      candidates:
+        description: 'Audiciones por locutor (1-5)'
+        required: true
+        default: '3'
+        type: choice
+        options: ['1', '2', '3']
+jobs:
+  studio-gpu:
+    # Requiere runner SELF-HOSTED con CUDA: los runners estándar de GitHub NO tienen GPU.
+    runs-on: [self-hosted, linux, x64, gpu]
+    timeout-minutes: 120
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Dependencias
+        run: |
+          command -v ffmpeg
+          python -m pip install -e '.[voice,dev]'
+      - name: Ejecutar pruebas CPU
+        run: python -m pytest -q
+      - name: Diseñar tres audiciones para cada narrador
+        run: loh design-voices --dest voices --candidates ${{ inputs.candidates }}
+      - name: Preparar referencias PROVISIONALES para audición
+        run: |
+          loh approve-voice juan 1 --voices voices --preview
+          loh approve-voice carla 1 --voices voices --preview
+      - name: Audición combinada y narración (NO aprobar temporada)
+        run: |
+          loh render stories/voice_test_papa_noel.json --provider qwen --voices voices --takes 3 --allow-short --output output/neural
+          loh render stories/voice_test_narracion.json --provider qwen --voices voices --takes 3 --allow-short --output output/neural
+      - name: Subir demos, referencias y análisis técnicos
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: juan-carla-voice-auditions-qwen
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            voices/auditions/
+            output/neural/*.mp3
+            output/neural/*.wav
+            output/neural/*.report.json

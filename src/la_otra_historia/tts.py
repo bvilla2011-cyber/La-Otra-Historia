@@ -6,6 +6,7 @@ import subprocess
 from pathlib import Path
 import numpy as np
 import soundfile as sf
+from .naturalness import describe_audio
 
 MODEL_BASE = "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
 
@@ -36,33 +37,76 @@ class EspeakPreviewTTS:
                        input=text, text=True, check=True, capture_output=True)
 
 class QwenTTS:
+    """Síntesis neuronal con referencias aprobables, múltiples tomas y control técnico."""
     identity = MODEL_BASE
+
     def __init__(self, voices_dir):
         try:
             import torch
             from qwen_tts import Qwen3TTSModel
-        except ImportError as e:
-            raise RuntimeError("Instala pip install -e '.[voice]'") from e
+        except ImportError as exc:
+            raise RuntimeError("Instala pip install -e '.[voice]'") from exc
         if not torch.cuda.is_available():
-            raise RuntimeError("Para Qwen3-TTS se necesita una GPU CUDA")
-        self.voices_dir = Path(voices_dir)
+            raise RuntimeError('Para Qwen3-TTS hace falta GPU CUDA')
+        self._torch = torch
+        self.voices_dir = Path(voices_dir).resolve()
+        self.configs = {}
+        digest = hashlib.sha256()
+        for speaker in ('juan', 'carla'):
+            config = json.loads((self.voices_dir / f'{speaker}.json').read_text(encoding='utf-8'))
+            audio = (self.voices_dir / config['ref_audio']).resolve()
+            if not audio.is_relative_to(self.voices_dir) or not audio.is_file():
+                raise ValueError(f'Referencia no autorizada o inexistente: {speaker}')
+            info = sf.info(audio)
+            if not 3 <= info.duration <= 35 or info.channels not in (1, 2):
+                raise ValueError(f'Referencia de {speaker} debe durar entre 3 y 35 segundos')
+            if len(config.get('ref_text', '').split()) < 5:
+                raise ValueError(f'La referencia de {speaker} necesita transcripción correcta')
+            self.configs[speaker] = (config, audio)
+            digest.update(audio.read_bytes())
+            digest.update(config['ref_text'].encode())
+        self.identity += ':' + digest.hexdigest()[:20] + ':multi-take-v1'
         self.model = Qwen3TTSModel.from_pretrained(
-            MODEL_BASE, device_map="cuda:0", dtype=torch.bfloat16, attn_implementation="sdpa")
-        h = hashlib.sha256()
-        for speaker in ("juan", "carla"):
-            h.update((self.voices_dir / f"{speaker}.wav").read_bytes())
-        self.identity += ":" + h.hexdigest()[:16]
+            MODEL_BASE, device_map='cuda:0', dtype=torch.bfloat16,
+            attn_implementation='sdpa')
         self.prompts = {}
+        self.last_takes = []
+
     def _prompt(self, speaker):
         if speaker not in self.prompts:
-            config = json.loads((self.voices_dir / f"{speaker}.json").read_text(encoding="utf-8"))
-            audio = (self.voices_dir / config["ref_audio"]).resolve()
-            if not audio.is_relative_to(self.voices_dir.resolve()):
-                raise ValueError("Ruta de referencia no autorizada")
+            config, audio = self.configs[speaker]
             self.prompts[speaker] = self.model.create_voice_clone_prompt(
-                ref_audio=str(audio), ref_text=config["ref_text"], x_vector_only_mode=False)
+                ref_audio=str(audio), ref_text=config['ref_text'],
+                x_vector_only_mode=False)
         return self.prompts[speaker]
-    def synthesize(self, speaker, text, path):
-        wavs, sr = self.model.generate_voice_clone(
-            text=text, language="Spanish", voice_clone_prompt=self._prompt(speaker))
-        sf.write(path, wavs[0], sr)
+
+    def synthesize(self, speaker, text, path, takes=2):
+        if speaker not in self.configs:
+            raise ValueError('Locutor desconocido')
+        if not 1 <= takes <= 5:
+            raise ValueError('takes debe ser entre 1 y 5')
+        key = f'{self.identity}/{speaker}/{text}'
+        base = int(hashlib.sha256(key.encode()).hexdigest()[:8], 16)
+        results = []
+        for i in range(takes):
+            seed = (base + i * 7919) % (2**31 - 1)
+            self._torch.manual_seed(seed)
+            try:
+                wavs, sr = self.model.generate_voice_clone(
+                    text=text, language='Spanish', voice_clone_prompt=self._prompt(speaker),
+                    do_sample=True, temperature=(.84, .92, .88, .79, .97)[i],
+                    top_p=.95, repetition_penalty=1.10)
+                data = np.asarray(wavs[0], dtype=np.float32)
+                metric = describe_audio(data, sr, len(text.split()))
+                metric.update({'take': i + 1, 'seed': seed})
+                results.append((metric, data, sr))
+            except Exception as exc:
+                results.append(({'valid': False, 'score': -1000, 'take': i + 1,
+                                 'reason': f'{type(exc).__name__}: {str(exc)[:120]}'}, None, None))
+        self.last_takes = [r[0] for r in results]
+        valid = [r for r in results if r[0]['valid']]
+        if not valid:
+            raise RuntimeError(f'Ninguna toma superó QA técnica: {self.last_takes}')
+        selected = max(valid, key=lambda x: x[0]['score'])
+        sf.write(path, selected[1], selected[2])
+        return {'selected_take': selected[0]['take'], 'attempts': self.last_takes}
