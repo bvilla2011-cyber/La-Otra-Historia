@@ -13,7 +13,7 @@ def main():
     voices.add_argument("--dest", type=Path, default=Path("voices"))
     prod = subs.add_parser("render")
     prod.add_argument("script", type=Path)
-    prod.add_argument("--provider", choices=["mock", "espeak-preview", "qwen"], default="mock")
+    prod.add_argument("--provider", choices=["mock", "espeak-preview", "piper-preview", "qwen"], default="mock")
     prod.add_argument("--voices", type=Path, default=Path("voices"))
     prod.add_argument("--assets", type=Path, default=Path("assets"))
     prod.add_argument("--output", type=Path, default=Path("output"))

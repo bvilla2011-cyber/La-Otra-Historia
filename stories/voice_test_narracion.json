@@ -1,0 +1,26 @@
+{
+  "id": "voice_test_narracion",
+  "title": "Audición en tercera persona — 4 bloques",
+  "segments": [
+    {
+      "speaker": "juan",
+      "text": "Aquel invierno, nadie en el pueblo quiso hablar de la última noche de diciembre. Solo Tomás recordaba el ruido de una campana, aunque la iglesia llevaba años abandonada.",
+      "pause_ms": 900
+    },
+    {
+      "speaker": "carla",
+      "text": "Clara encontró la primera pista dentro de un libro prestado. No era una carta de amor ni una advertencia. Era una fotografía de su propia casa tomada cuarenta años antes de que existiera.",
+      "pause_ms": 950
+    },
+    {
+      "speaker": "juan",
+      "text": "Al principio pensó que se trataba de una broma. Pero cuando observó el fondo de la imagen, distinguió a un niño apoyado en la ventana del piso superior. Era Tomás.",
+      "pause_ms": 950
+    },
+    {
+      "speaker": "carla",
+      "text": "Aquella noche los dos comprendieron que no buscaban a un desconocido. Buscaban una explicación para un recuerdo que ninguno de ellos había vivido.",
+      "pause_ms": 600
+    }
+  ]
+}

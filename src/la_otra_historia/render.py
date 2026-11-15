@@ -10,6 +10,7 @@ import soundfile as sf
 from scipy.signal import resample_poly
 from .schema import read_script
 from .tts import MockTTS, QwenTTS, EspeakPreviewTTS
+from .piper_preview import PiperPreviewTTS
 
 SR = 48000
 
@@ -32,13 +33,14 @@ def render(script_path, output_dir, voices_dir, assets_dir, provider_name, allow
     factories = {
         "mock": lambda: MockTTS(),
         "espeak-preview": lambda: EspeakPreviewTTS(),
-        "qwen": lambda: QwenTTS(voices_dir)
+        "qwen": lambda: QwenTTS(voices_dir),
+        "piper-preview": lambda: PiperPreviewTTS(voices_dir)
     }
     if provider_name not in factories: raise ValueError("Proveedor desconocido")
     tts = factories[provider_name]()
     out_wav = output_dir / (script["id"] + ".wav")
     report = {"id": script["id"], "title": script["title"], "provider": provider_name,
-              "quality": "robotic-technical-preview" if provider_name == "espeak-preview" else "model-dependent",
+              "quality": {"espeak-preview": "robotic-technical-preview", "piper-preview": "neural-technical-preview", "mock": "synthetic-tone-test"}.get(provider_name, "model-dependent"),
               "cached_segments": 0, "new_segments": 0, "segments": len(script["segments"])}
     with sf.SoundFile(out_wav, "w", samplerate=SR, channels=2, subtype="PCM_16") as master:
         for i, segment in enumerate(script["segments"], 1):

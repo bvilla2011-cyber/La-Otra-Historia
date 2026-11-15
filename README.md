@@ -27,3 +27,10 @@ Los pesos se descargan de la fuente original y no deben subirse a GitHub. Los gu
 
 ## Calidad y licencia
 No clonar voces de terceros sin consentimiento. Usar música y efectos propios o licenciados. QA: pronunciación, consistencia de identidad, expresividad, artefactos, mezcla y escucha humana. GitHub no ofrece GPU permanente; la inferencia neuronal necesitará GPU remota o local compatible.
+
+## v0.3 · Prueba neuronal adicional en CPU
+
+Hay un nuevo proveedor `piper-preview` de dos voces neuronales españolas (modelo Sharvard: M=Juan; F=Carla), que permite comparar un salto respecto al preview robótico. No equivale a ElevenLabs y las muestras todavía deben evaluarse por oído. El modelo se descarga en GitHub Actions, no se incorpora al repositorio.
+
+- [Generar y descargar las audiciones en GitHub Actions](https://github.com/bvilla2011-cyber/La-Otra-Historia/actions/workflows/voice-neural-cpu.yml).
+- [Guía y licencias](docs/objetivo_voces_neuronales.md).

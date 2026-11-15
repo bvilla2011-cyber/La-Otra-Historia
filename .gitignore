@@ -14,3 +14,7 @@ voices/*.json
 .env
 *.key
 *.token
+
+# Modelos externos y referencias de voz; no versionar pesos
+voices/*.onnx
+voices/*.onnx.json

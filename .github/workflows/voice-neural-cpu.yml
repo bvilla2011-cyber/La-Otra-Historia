@@ -1,0 +1,46 @@
+name: Demo neuronal CPU Juan y Carla (Piper)
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'stories/**'
+      - 'pyproject.toml'
+      - '.github/workflows/voice-neural-cpu.yml'
+jobs:
+  preview-neural:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Dependencias de audio
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg espeak-ng
+      - name: Instalar motor y pruebas
+        run: python -m pip install -e '.[piper,dev]'
+      - name: Probar componentes
+        run: python -m pytest -q
+      - name: Descargar voces originales desde catálogo Piper
+        run: python -m piper.download_voices --data-dir voices es_ES-sharvard-medium
+      - name: Render de Juan y Carla
+        run: |
+          loh render stories/voice_test_papa_noel.json --provider piper-preview --voices voices --allow-short --output output/neural
+          loh render stories/voice_test_juan.json --provider piper-preview --voices voices --allow-short --output output/neural
+          loh render stories/voice_test_carla.json --provider piper-preview --voices voices --allow-short --output output/neural
+          loh render stories/voice_test_narracion.json --provider piper-preview --voices voices --allow-short --output output/neural
+      - name: Subir cuatro audiciones
+        uses: actions/upload-artifact@v4
+        with:
+          name: LA-OTRA-HISTORIA-PIPER-v0-3
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            output/neural/*.mp3
+            output/neural/*.wav
+            output/neural/*.report.json
